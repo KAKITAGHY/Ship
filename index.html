@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoot 'Em Up</title>
+    <style>
+        body { text-align: center; background-color: black; }
+        canvas { background: #222; display: block; margin: auto; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="500" height="500"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        
+        let player = { x: 230, y: 450, width: 40, height: 40, speed: 10 };
+        let bullets = [];
+        let enemies = [];
+        let keys = {};
+        
+        function spawnEnemies() {
+            for (let i = 0; i < 5; i++) {
+                enemies.push({ x: Math.random() * 460, y: Math.random() * 100, width: 40, height: 40, speed: 2 });
+            }
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "blue";
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            ctx.fillStyle = "red";
+            enemies.forEach(enemy => ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height));
+            
+            ctx.fillStyle = "yellow";
+            bullets.forEach(bullet => ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height));
+        }
+        
+        function update() {
+            if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
+            if (keys["ArrowRight"] && player.x < canvas.width - player.width) player.x += player.speed;
+            
+            bullets.forEach(bullet => bullet.y -= 10);
+            bullets = bullets.filter(bullet => bullet.y > 0);
+            
+            enemies.forEach(enemy => enemy.y += enemy.speed);
+            enemies.forEach(enemy => {
+                if (enemy.y > canvas.height) enemy.y = 0;
+            });
+            
+            bullets.forEach((bullet, bIndex) => {
+                enemies.forEach((enemy, eIndex) => {
+                    if (bullet.x < enemy.x + enemy.width && bullet.x + bullet.width > enemy.x && bullet.y < enemy.y + enemy.height && bullet.y + bullet.height > enemy.y) {
+                        enemies.splice(eIndex, 1);
+                        bullets.splice(bIndex, 1);
+                        enemies.push({ x: Math.random() * 460, y: 0, width: 40, height: 40, speed: 2 });
+                    }
+                });
+            });
+        }
+        
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        document.addEventListener("keydown", (e) => {
+            keys[e.key] = true;
+            if (e.key === " ") bullets.push({ x: player.x + 15, y: player.y, width: 10, height: 20 });
+        });
+        
+        document.addEventListener("keyup", (e) => {
+            keys[e.key] = false;
+        });
+        
+        spawnEnemies();
+        gameLoop();
+    </script>
+</body>
+</html>
